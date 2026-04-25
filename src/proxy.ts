@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 // Must match the list in auth.ts
 const ADMIN_EMAILS = ['manager@laundry.com', 'admin@laundrypro.com']
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -68,6 +68,8 @@ export async function middleware(request: NextRequest) {
 
   return supabaseResponse
 }
+
+export default proxy
 
 export const config = {
   matcher: [

@@ -146,7 +146,7 @@ export default async function DashboardPage() {
                     <div className="w-28 flex justify-end">
                       <div className={clsx(
                         "flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-widest",
-                        config.bg, config.color, config.border
+                        config.bg, config.color
                       )}>
                         <Icon className="w-3 h-3" />
                         {config.label}

@@ -8,7 +8,7 @@ export interface UserProfile {
   created_at: string
 }
 
-export type OrderStatus = 'pending' | 'processing' | 'ready' | 'completed'
+export type OrderStatus = 'pending' | 'processing' | 'ready' | 'out_for_delivery' | 'completed'
 export type PaymentMethod = 'COP' | 'COD' | 'GCASH' | 'CASH'
 export type PaymentStatus = 'unpaid' | 'paid' | 'verifying'
 

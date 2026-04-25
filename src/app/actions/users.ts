@@ -58,6 +58,7 @@ export async function createCustomer(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const address = formData.get('address') as string
+  const contactNumber = formData.get('contact_number') as string
   
   if (contactNumber && !isValidPHMobile(contactNumber)) {
     return { error: 'Invalid 11-digit Philippine mobile number required (09XXXXXXXXX)' }

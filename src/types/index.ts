@@ -9,7 +9,7 @@ export interface UserProfile {
 }
 
 export type OrderStatus = 'pending' | 'processing' | 'ready' | 'completed'
-export type PaymentMethod = 'COP' | 'COD' | 'GCASH'
+export type PaymentMethod = 'COP' | 'COD' | 'GCASH' | 'CASH'
 export type PaymentStatus = 'unpaid' | 'paid' | 'verifying'
 
 export interface Order {

@@ -1,13 +1,14 @@
 import { createClient } from '@/utils/supabase/server'
 import Link from 'next/link'
-import { PlusCircle, Clock, Loader2, CheckCircle, Package, ArrowRight } from 'lucide-react'
+import { PlusCircle, Clock, Loader2, CheckCircle, Package, ArrowRight, Bell, Truck } from 'lucide-react'
 import { OrderStatus } from '@/types'
 import { clsx } from 'clsx'
 
-const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; bg: string; icon: React.ComponentType<{ className?: string }> }> = {
+const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ComponentType<{ className?: string }> }> = {
   pending: { label: 'Pending', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Clock },
   processing: { label: 'Processing', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: Loader2 },
   ready: { label: 'Ready', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle },
+  out_for_delivery: { label: 'Out for Delivery', color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200', icon: Truck },
   completed: { label: 'Completed', color: 'text-gray-600', bg: 'bg-gray-50 border-gray-200', icon: Package },
 }
 
@@ -36,13 +37,31 @@ export default async function DashboardPage() {
   return (
     <div className="p-8">
       {/* Welcome Banner */}
-      <div className="mb-8 relative overflow-hidden rounded-3xl gradient-primary p-8 text-white shadow-xl shadow-blue-100">
-        <div className="relative z-10">
-          <h1 className="text-3xl font-black tracking-tight mb-2">
-            Hello, {profile?.full_name?.split(' ')[0] ?? 'there'} 👋
+      <div className="mb-8 relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 p-10 lg:p-12 text-white shadow-2xl shadow-blue-200/50 group">
+        {/* Technical Notification HUD - Pushed further right */}
+        <div className="absolute top-8 right-10 z-20">
+          <button className="w-14 h-14 flex items-center justify-center bg-white/5 hover:bg-white/10 rounded-2xl border border-white/20 backdrop-blur-xl transition-all active:scale-90 group/hud relative shadow-inner">
+            <div className="relative">
+              <Bell className="w-6 h-6 text-white/90 group-hover/hud:text-white transition-colors" strokeWidth={1.5} />
+              <div className="absolute -top-1 -right-1 flex">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-400 border-2 border-blue-600"></span>
+              </div>
+            </div>
+            {/* Subtle corner accents */}
+            <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white/20 rounded-tl-lg" />
+            <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-white/20 rounded-br-lg" />
+          </button>
+        </div>
+
+        <div className="relative z-10 pr-24"> {/* Added padding-right to protect the HUD area */}
+          <p className="text-[10px] font-black text-blue-100 uppercase tracking-[0.3em] mb-4 opacity-80">Welcome Back to LaundryPro</p>
+          <h1 className="text-4xl lg:text-5xl font-black tracking-tight mb-4">
+            Hello, {profile?.full_name?.split(' ')[0] ?? 'there'} <span className="animate-pulse">_</span>
           </h1>
-          <p className="text-blue-100 max-w-md text-sm leading-relaxed mb-6">
-            Welcome back to LaundryPro. Your laundry is our priority. Place a new order or track your existing ones below.
+          <p className="text-blue-100/90 max-w-md text-sm lg:text-base font-medium leading-relaxed mb-10">
+            Everything is set for your fresh experience today. <br className="hidden lg:block" />
+            <span className="text-white font-bold">READY TO SERVE</span> // You have {pendingOrders} order{pendingOrders !== 1 ? 's' : ''} in progress.
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
@@ -105,30 +124,46 @@ export default async function DashboardPage() {
         ) : (
           <div className="divide-y divide-gray-50">
             {orders.map((order) => {
-              const config = STATUS_CONFIG[order.status as OrderStatus]
+              const config = STATUS_CONFIG[order.status] || STATUS_CONFIG.processing
               const Icon = config.icon
               return (
-                <div key={order.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
-                      <Package className="w-4 h-4 text-blue-600" />
+                <div key={order.id} className="px-6 py-4 flex items-center group hover:bg-gray-50/50 transition-all">
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Package className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-gray-900 font-mono">
+                      <p className="text-sm font-black text-gray-900 font-mono tracking-tight">
                         #{order.id.slice(0, 8).toUpperCase()}
                       </p>
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-0.5">
                         {new Date(order.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className={clsx('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border', config.bg, config.color)}>
-                      <Icon className="w-3 h-3" />
-                      {config.label}
-                    </span>
-                    <span className="text-sm font-semibold text-gray-900">₱{order.total_price.toLocaleString()}</span>
-                    <span className="text-xs text-gray-400 font-medium">{order.payment_method}</span>
+
+                  <div className="flex items-center gap-6">
+                    <div className="w-28 flex justify-end">
+                      <div className={clsx(
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-widest",
+                        config.bg, config.color, config.border
+                      )}>
+                        <Icon className="w-3 h-3" />
+                        {config.label}
+                      </div>
+                    </div>
+                    
+                    <div className="w-20 text-right">
+                      <p className="text-sm font-black text-gray-900 tracking-tighter">
+                        ₱{order.total_price.toLocaleString()}
+                      </p>
+                    </div>
+
+                    <div className="w-16 text-right">
+                      <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">
+                        {order.payment_method}
+                      </p>
+                    </div>
                   </div>
                 </div>
               )

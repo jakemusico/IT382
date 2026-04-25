@@ -19,7 +19,7 @@ export default function AdminPaymentsPage() {
   async function fetchPayments() {
     const { data } = await supabase
       .from('payments')
-      .select('*, orders(id, total_price, payment_method, payment_status, users(full_name, email))')
+      .select('*, orders(id, total_price, payment_method, payment_status, users(full_name, email, contact_number))')
       .order('created_at', { ascending: false })
     
     if (data) setPayments(data)

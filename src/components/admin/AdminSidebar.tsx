@@ -20,9 +20,10 @@ import {
 import { clsx } from 'clsx'
 
 const navItems = [
-  { href: '/admin/dashboard', label: 'Overview', icon: LayoutDashboard },
+  { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/orders', label: 'Orders', icon: ClipboardList },
   { href: '/admin/history', label: 'History', icon: Package },
+  { href: '/admin/services', label: 'Services', icon: PlusCircle },
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/profile', label: 'Profile', icon: Shield },
 ]
@@ -54,14 +55,14 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       <nav className="flex-1 px-3 py-4 space-y-1">
         {navItems.map(({ href, label, icon: Icon }) => {
           const isMatching = pathname === href || (href !== '/admin/dashboard' && pathname.startsWith(href))
-          
+
           // Only highlight if no other menu item is a more specific (longer) match
-          const isMoreSpecificMatch = navItems.some(item => 
-            item.href !== href && 
-            item.href.startsWith(href) && 
+          const isMoreSpecificMatch = navItems.some(item =>
+            item.href !== href &&
+            item.href.startsWith(href) &&
             pathname.startsWith(item.href)
           )
-          
+
           const isActive = isMatching && !isMoreSpecificMatch
           return (
             <Link

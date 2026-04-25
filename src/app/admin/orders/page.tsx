@@ -28,7 +28,7 @@ export default function AdminOrdersPage() {
     // Filter: (status != completed) OR (payment_status != paid)
     const { data } = await supabase
       .from('orders')
-      .select('*, users(full_name, email, role), payments(*)')
+      .select('*, users(full_name, email, role, contact_number), payments(*)')
       .neq('status', 'completed')
       .order('created_at', { ascending: false })
     
@@ -91,13 +91,14 @@ export default function AdminOrdersPage() {
           <table className="w-full">
             <thead>
               <tr className="text-left border-b border-gray-50">
-                <th className="px-10 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Order</th>
-                <th className="px-10 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Customer</th>
-                <th className="px-10 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Amount</th>
-                <th className="px-10 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Payment</th>
-                <th className="px-10 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Status</th>
-                <th className="px-10 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Progress</th>
-                <th className="px-10 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">Audited</th>
+                <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Order</th>
+                <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Customer</th>
+                <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Amount</th>
+                <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Dispatch</th>
+                <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Payment</th>
+                <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Status</th>
+                <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] min-w-[180px]">Progress</th>
+                <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">Audited</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -107,28 +108,36 @@ export default function AdminOrdersPage() {
                   onClick={() => setSelectedOrder(order)}
                   className="group hover:bg-blue-50/40 transition-all cursor-pointer"
                 >
-                  <td className="px-10 py-6">
+                  <td className="px-6 py-6">
                     <span className="font-mono text-sm font-black text-gray-300 group-hover:text-blue-500 transition-colors">
                       #{order.id.slice(0, 8).toUpperCase()}
                     </span>
                   </td>
-                  <td className="px-10 py-6">
+                  <td className="px-6 py-6">
                     <p className="text-sm font-black text-gray-900 leading-none mb-1">
-                      {order.users?.role === 'admin' ? 'Walk-In Customer' : (order.users?.full_name ?? '—')}
+                      {order.is_walk_in ? (order.customer_name || 'Walk-In Customer') : (order.users?.full_name ?? '—')}
                     </p>
-                    <p className="text-[11px] text-gray-400 font-bold">
-                      {order.users?.role === 'admin' ? 'Counter Transaction' : order.users?.email}
+                    <p className="text-[11px] font-bold text-gray-400">
+                      {order.is_walk_in ? (order.customer_email || 'Counter Transaction') : order.users?.email}
                     </p>
                   </td>
-                  <td className="px-10 py-6 font-black text-gray-900 text-sm italic">
+                  <td className="px-6 py-6 font-black text-gray-900 text-sm italic">
                     ₱{order.total_price.toLocaleString()}
                   </td>
-                  <td className="px-10 py-6">
+                  <td className="px-6 py-6">
+                    <span className={clsx(
+                      "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all",
+                      order.delivery_type === 'delivery' ? "bg-emerald-50 border-emerald-100 text-emerald-600" : "bg-blue-50 border-blue-100 text-blue-600"
+                    )}>
+                      {order.delivery_type === 'delivery' ? 'Delivery' : 'Pick Up'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-6">
                     <span className="text-[10px] font-black bg-gray-100 text-gray-500 px-3 py-1.5 rounded-xl uppercase tracking-wider border border-gray-200">
                       {order.payment_method}
                     </span>
                   </td>
-                  <td className="px-10 py-6">
+                  <td className="px-6 py-6">
                     <span className={clsx(
                       'inline-flex items-center px-3 py-1.5 rounded-full text-[10px] font-black border uppercase tracking-wider',
                       PAYMENT_STATUS_COLORS[order.payment_status]
@@ -136,16 +145,16 @@ export default function AdminOrdersPage() {
                       {order.payment_status}
                     </span>
                   </td>
-                  <td className="px-10 py-6" onClick={(e) => e.stopPropagation()}>
+                  <td className="px-6 py-6">
                     <StatusUpdater 
-                      orderId={order.id} 
                       currentStatus={order.status as OrderStatus} 
-                      onUpdate={fetchOrders}
                     />
                   </td>
-                  <td className="px-10 py-6 text-right">
+                  <td className="px-6 py-6 text-right">
                     <span className="text-[11px] font-black text-gray-300 group-hover:text-gray-500 transition-colors">
                       {new Date(order.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      <span className="mx-1 opacity-50">•</span>
+                      {new Date(order.created_at).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', hour12: true })}
                     </span>
                   </td>
                 </tr>

@@ -5,15 +5,17 @@ import { OrderStatus } from '@/types'
 const STATUS_MESSAGES: Record<OrderStatus, string> = {
   pending: 'Your laundry order has been received and is pending processing.',
   processing: 'Great news! Your laundry is now being washed and processed.',
-  ready: 'Your laundry is clean and ready for pickup or delivery!',
+  ready: 'Your laundry is clean and ready for pickup!',
+  out_for_delivery: 'Great news! Your laundry is now out for delivery to your address.',
   completed: 'Your order has been completed. Thank you for choosing us!',
 }
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: '⏳ Order Pending',
-  processing: '🧺 Processing',
-  ready: '✅ Ready',
-  completed: '🎉 Completed',
+  pending: 'Order Pending',
+  processing: 'Processing',
+  ready: 'Ready for Pickup',
+  out_for_delivery: 'Out for Delivery',
+  completed: 'Completed',
 }
 
 interface EmailParams {
@@ -24,9 +26,10 @@ interface EmailParams {
 }
 
 export async function sendStatusEmail({ to, customerName, orderId, status }: EmailParams) {
-  const apiKey = process.env.RESEND_API_KEY
+  const apiKey = process.env.BREVO_API_KEY
+
   if (!apiKey) {
-    console.warn('RESEND_API_KEY not set — skipping email notification')
+    console.warn('BREVO_API_KEY not set — skipping email notification')
     return { success: false, error: 'Email service not configured' }
   }
 
@@ -37,82 +40,76 @@ export async function sendStatusEmail({ to, customerName, orderId, status }: Ema
   const html = `
     <!DOCTYPE html>
     <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Order Status Update</title>
-      </head>
-      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; margin: 0; padding: 0;">
-        <div style="max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
-          <!-- Header -->
-          <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 40px 40px 32px; text-align: center;">
-            <div style="font-size: 32px; margin-bottom: 8px;">🧺</div>
-            <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px;">LaundryPro</h1>
-            <p style="color: rgba(255,255,255,0.8); margin: 4px 0 0; font-size: 14px;">Laundry Management System</p>
-          </div>
-
-          <!-- Body -->
+      <body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; padding: 40px 20px; color: #1e293b; margin: 0;">
+        <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0;">
+          
+          <!-- Header Bar -->
+          <div style="height: 4px; background: #2563eb;"></div>
+          
           <div style="padding: 40px;">
-            <p style="color: #374151; margin: 0 0 8px; font-size: 16px;">Hi <strong>${customerName}</strong>,</p>
-            <p style="color: #6b7280; margin: 0 0 32px; font-size: 15px;">Your order status has been updated.</p>
+            <h1 style="font-size: 20px; font-weight: 800; color: #0f172a; margin: 0 0 24px; letter-spacing: -0.025em; text-transform: uppercase;">
+              LaundryPro <span style="color: #2563eb; font-weight: 400; margin-left: 8px; opacity: 0.5;">|</span> <span style="color: #64748b; font-size: 14px; font-weight: 600; margin-left: 8px;">Order Update</span>
+            </h1>
+            
+            <p style="font-size: 16px; color: #475569; margin-bottom: 32px;">Hello <strong>${customerName}</strong>,</p>
 
-            <!-- Status Badge -->
-            <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 32px;">
-              <p style="color: #6b7280; margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600;">Current Status</p>
-              <p style="color: #1d4ed8; margin: 0; font-size: 24px; font-weight: 700;">${statusLabel}</p>
-            </div>
-
-            <!-- Order Info -->
-            <div style="background: #f9fafb; border-radius: 10px; padding: 20px; margin-bottom: 24px;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                <span style="color: #6b7280; font-size: 14px;">Order ID</span>
-                <span style="color: #111827; font-size: 14px; font-weight: 600; font-family: monospace;">#${shortId}</span>
+            <!-- Status Card -->
+            <div style="background: #f1f5f9; border-radius: 12px; padding: 24px; border-left: 4px solid #2563eb; margin-bottom: 32px;">
+              <p style="margin: 0 0 12px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em;">Order Details</p>
+              
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <span style="font-size: 14px; color: #475569;">Order ID:</span>
+                <span style="font-size: 14px; font-weight: 700; color: #0f172a; font-family: monospace;">#${shortId}</span>
+              </div>
+              
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-size: 14px; color: #475569;">New Status:</span>
+                <span style="font-size: 16px; font-weight: 800; color: #2563eb;">${statusLabel}</span>
               </div>
             </div>
 
-            <p style="color: #374151; font-size: 15px; line-height: 1.6; margin: 0 0 32px;">${message}</p>
-
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard" 
-               style="display: block; background: #3b82f6; color: #ffffff; text-decoration: none; text-align: center; padding: 14px 24px; border-radius: 10px; font-size: 15px; font-weight: 600;">
-              View Order Details
-            </a>
-          </div>
-
-          <!-- Footer -->
-          <div style="padding: 24px 40px; background: #f9fafb; border-top: 1px solid #f3f4f6; text-align: center;">
-            <p style="color: #9ca3af; margin: 0; font-size: 12px;">
-              © 2025 LaundryPro. If you have any questions, please contact us.
+            <p style="font-size: 15px; color: #334155; line-height: 1.6; font-style: italic; background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px dashed #e2e8f0; margin-bottom: 32px;">
+              "${message}"
             </p>
+
+            <div style="padding-top: 32px; border-top: 1px solid #f1f5f9; text-align: center;">
+              <p style="font-size: 12px; color: #94a3b8; margin: 0;">
+                Thank you for choosing <strong>LaundryPro</strong>. 
+                <br>Our team is working hard to ensure your clothes are perfectly clean.
+              </p>
+            </div>
           </div>
         </div>
       </body>
     </html>
   `
 
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || 'onboarding@brevo.com'
+
   try {
-    const res = await fetch('https://api.resend.com/emails', {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
+        'accept': 'application/json',
+        'api-key': apiKey,
+        'content-type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'LaundryPro <noreply@laundrypro.com>',
-        to: [to],
+        sender: { name: 'LaundryPro', email: senderEmail },
+        to: [{ email: to, name: customerName }],
         subject: `Order #${shortId} — ${statusLabel}`,
-        html,
+        htmlContent: html,
       }),
     })
 
-    if (!res.ok) {
-      const errData = await res.json()
-      console.error('Email send error:', errData)
-      return { success: false, error: errData.message }
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || 'Failed to send email via Brevo')
     }
 
     return { success: true }
-  } catch (err) {
-    console.error('Email send exception:', err)
-    return { success: false, error: 'Network error' }
+  } catch (err: any) {
+    console.error('Brevo Email Error:', err)
+    return { success: false, error: err.message }
   }
 }

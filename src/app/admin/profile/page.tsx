@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import { Shield, Mail, Calendar, UserCheck } from 'lucide-react'
 import { getSettings } from '@/app/actions/settings'
 import { AdminProfileForm } from '@/components/admin/AdminProfileForm'
+import { AdminProfileHeader } from '@/components/admin/AdminProfileHeader'
 
 export default async function AdminProfilePage() {
   const supabase = await createClient()
@@ -26,17 +27,7 @@ export default async function AdminProfilePage() {
       <div className="space-y-6">
         {/* Profile Card */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-gray-50 bg-gray-950">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center border-4 border-gray-800 shadow-sm">
-                <Shield className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-white">{profile?.full_name || 'Administrator'}</h2>
-                <p className="text-sm text-gray-400">{user.email}</p>
-              </div>
-            </div>
-          </div>
+          <AdminProfileHeader user={user} profile={profile} />
 
           <div className="p-6 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -61,6 +52,23 @@ export default async function AdminProfilePage() {
                   <span className="text-sm">
                     {new Date(profile?.created_at || '').toLocaleDateString('en-PH', { dateStyle: 'long' })}
                   </span>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Contact Number</label>
+                <div className="flex items-center gap-2 text-gray-700 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100">
+                  <div className="w-4 h-4 flex items-center justify-center font-black text-gray-400 text-[10px]">#</div>
+                  <span className="text-sm">{profile?.contact_number || 'Not provided'}</span>
+                </div>
+              </div>
+              <div className="space-y-1 md:col-span-2">
+                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Residential Address</label>
+                <div className="flex items-center gap-2 text-gray-700 bg-gray-50 px-3 py-2 rounded-lg border border-gray-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 text-gray-400">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                  </svg>
+                  <span className="text-sm">{profile?.address || 'Not provided'}</span>
                 </div>
               </div>
             </div>

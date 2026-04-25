@@ -3,12 +3,15 @@ import { ShoppingBag, Users, Clock, TrendingUp, ArrowUpRight, Package } from 'lu
 import { clsx } from 'clsx'
 import { OrderStatus } from '@/types'
 
-const STATUS_COLORS: Record<OrderStatus, string> = {
+const STATUS_COLORS: Record<string, string> = {
   pending: 'text-amber-700 bg-amber-50 border-amber-200',
   processing: 'text-blue-700 bg-blue-50 border-blue-200',
   ready: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+  out_for_delivery: 'text-purple-700 bg-purple-50 border-purple-200',
   completed: 'text-gray-600 bg-gray-50 border-gray-200',
 }
+
+const ADMIN_EMAILS = ['manager@laundry.com', 'admin@laundrypro.com']
 
 export default async function AdminDashboard() {
   const supabase = await createClient()
@@ -90,6 +93,7 @@ export default async function AdminDashboard() {
                   <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Order ID</th>
                   <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Customer</th>
                   <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Dispatch</th>
                   <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Payment</th>
                   <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
@@ -105,19 +109,39 @@ export default async function AdminDashboard() {
                     </td>
                     <td className="px-6 py-3.5">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{order.users?.full_name ?? '—'}</p>
-                        <p className="text-xs text-gray-400">{order.users?.email}</p>
+                        {order.is_walk_in ? (
+                          <>
+                            <p className="text-sm font-black text-gray-900 leading-none mb-1">{order.customer_name || 'Walk-In Customer'}</p>
+                            <p className="text-[11px] font-bold text-gray-400">Counter Transaction</p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-sm font-black text-gray-900 leading-none mb-1">{order.users?.full_name ?? '—'}</p>
+                            <p className="text-[11px] font-bold text-gray-400">{order.users?.email}</p>
+                          </>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-3.5">
                       <span className="text-sm font-semibold text-gray-900">₱{order.total_price.toLocaleString()}</span>
                     </td>
                     <td className="px-6 py-3.5">
+                      <span className={clsx(
+                        "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter",
+                        order.delivery_type === 'delivery' ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"
+                      )}>
+                        {order.delivery_type === 'delivery' ? 'Delivery' : 'Pick Up'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-3.5">
                       <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded-md">{order.payment_method}</span>
                     </td>
                     <td className="px-6 py-3.5">
-                      <span className={clsx('inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border capitalize', STATUS_COLORS[order.status as OrderStatus])}>
-                        {order.status}
+                      <span className={clsx(
+                        'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border capitalize', 
+                        STATUS_COLORS[order.status] || STATUS_COLORS.processing
+                      )}>
+                        {order.status.replace('_', ' ')}
                       </span>
                     </td>
                     <td className="px-6 py-3.5">

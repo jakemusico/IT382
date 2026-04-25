@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import { User, Mail, ShoppingBag, ShieldCheck, Search, Sparkles, Settings2 } from 'lucide-react'
+import { User, Mail, ShoppingBag, ShieldCheck, Search, Sparkles, Settings2, UserPlus } from 'lucide-react'
 import { UserDetailsModal } from '@/components/admin/UserDetailsModal'
+import { AddCustomerModal } from '@/components/admin/AddCustomerModal'
 import { clsx } from 'clsx'
 
 const SYSADMIN_EMAIL = 'manager@laundry.com'
@@ -12,6 +13,7 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedUser, setSelectedUser] = useState<any>(null)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const supabase = createClient()
 
@@ -57,15 +59,24 @@ export default function AdminUsersPage() {
           <h1 className="text-3xl font-black text-gray-900 tracking-tight">Identity Management</h1>
           <p className="text-gray-500 font-medium mt-1">Control access and oversight of all registered personnel.</p>
         </div>
-        <div className="relative w-72">
-          <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
-          <input 
-            type="text"
-            placeholder="Search personnel..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm"
-          />
+        <div className="flex items-center gap-4">
+          <div className="relative w-72">
+            <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+            <input 
+              type="text"
+              placeholder="Search personnel..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm"
+            />
+          </div>
+          <button 
+            onClick={() => setIsAddModalOpen(true)}
+            className="h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-blue-200"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span className="text-[11px] font-black uppercase tracking-widest">Add Client</span>
+          </button>
         </div>
       </div>
 
@@ -163,12 +174,27 @@ export default function AdminUsersPage() {
         <UserDetailsModal 
           user={selectedUser}
           isOpen={!!selectedUser}
-          onClose={() => {
-            setSelectedUser(null)
+          onSuccess={() => {
             fetchUsers()
+          }}
+          onClose={(updatedUser) => {
+            if (updatedUser) {
+              // Optimistic local update
+              setUsers(prev => prev.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u))
+            }
+            setSelectedUser(null)
           }}
         />
       )}
+
+      <AddCustomerModal 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+        onSuccess={() => {
+          setIsAddModalOpen(false)
+          fetchUsers()
+        }} 
+      />
     </div>
   )
 }

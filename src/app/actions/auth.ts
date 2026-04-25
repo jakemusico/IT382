@@ -52,13 +52,20 @@ export async function register(formData: FormData) {
   const fullName = formData.get('full_name') as string
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+  const contactNumber = formData.get('contact_number') as string
+  const address = formData.get('address') as string
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: { full_name: fullName },
-    },
+      data: { 
+        full_name: fullName,
+        contact_number: contactNumber,
+        address: address,
+        role: 'client' 
+      },
+    }
   })
 
   if (error) return { error: error.message }
